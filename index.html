@@ -258,7 +258,8 @@ canvas { display:block; width:100%; max-height:52vh; height:auto; margin:auto; b
         <div class="session-video" id="sessionVideoWrap">
           <video id="sessionVideo" controls playsinline></video>
           <p>촬영 과정이 영상으로도 저장됐어요</p>
-          <div class="btn-row"><button class="btn secondary" id="downloadVideoBtn">촬영 영상 다운로드</button></div>
+          <div class="btn-row"><button class="btn secondary" id="downloadVideoBtn">촬영 영상 새 탭에서 열기 (저장하기)</button></div>
+          <p class="mini-help">새 탭이 열리면 화면 위쪽 다운로드 아이콘(⬇)을 눌러 저장하세요. 그래도 안 되면 영상을 길게 눌러서 "동영상 다운로드"를 선택해도 돼요.</p>
         </div>
         <div class="selection-grid" id="selectionGrid"></div>
         <p class="selection-count" id="selectionCount">0 / 4 선택</p>
@@ -822,9 +823,11 @@ async function runShoot(){
       state.sessionVideoUrl = videoUrl;
       $('#sessionVideo').src = videoUrl;
       $('#downloadVideoBtn').onclick = () => {
-        const a = document.createElement('a');
-        a.download = `${APP_CONFIG.fileName}_영상_${Date.now()}${state.recordedMimeType.includes('mp4') ? '.mp4' : '.webm'}`;
-        a.href = videoUrl; a.click();
+        // 모바일 브라우저(특히 안드로이드 크롬)에서는 blob 영상을 앱 안에서 강제로
+        // 다운로드시키는 방식이 잘 안 먹힐 때가 많아요. 그래서 새 탭에서 영상을 열어주고,
+        // 크롬 자체 영상 재생 화면에 있는 다운로드 아이콘(⬇)으로 저장하도록 안내해요.
+        window.open(videoUrl, '_blank');
+        setStatus('새 탭에서 영상이 열렸어요. 화면 위쪽의 다운로드 아이콘(⬇)을 눌러 저장하세요.');
       };
       $('#sessionVideoWrap').classList.add('show');
     }
