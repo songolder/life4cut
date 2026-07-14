@@ -166,6 +166,12 @@ canvas { display:block; width:100%; max-height:52vh; height:auto; margin:auto; b
 .draw-modal.show { display:flex; flex-direction:column; }
 .draw-head { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:4px 0 10px; }
 .draw-head strong { font-size:15px; }
+.photo-nav { display:flex; align-items:center; gap:6px; padding-bottom:8px; }
+.photo-nav-btn { flex:1; height:36px; border-radius:10px; border:1px solid var(--line); background:var(--panel2); color:#fff; font-weight:800; font-size:13px; }
+.photo-nav-btn.active { border-color:var(--primary); background:var(--primary); }
+.mode-row { display:grid; grid-template-columns:repeat(3,1fr); gap:7px; margin-bottom:10px; }
+.mode { border:2px solid transparent; background:var(--panel2); color:#fff; border-radius:11px; padding:10px 4px; font-size:12px; font-weight:800; }
+.mode.active { border-color:var(--primary); background:#40242f; }
 .draw-area { flex:1; min-height:0; overflow:auto; display:grid; place-items:center; background:#08080a; border-radius:14px; border:1px solid var(--line); overscroll-behavior:contain; }
 #drawCanvas { display:block; max-width:100%; max-height:100%; touch-action:none; background:#fff; }
 .draw-footer { flex:0 0 auto; padding-top:10px; }
@@ -195,7 +201,14 @@ canvas { display:block; width:100%; max-height:52vh; height:auto; margin:auto; b
           <button class="option-card" data-layout="grid"><strong>2×2 격자</strong><small>정사각 느낌</small></button>
           <button class="option-card" data-layout="strip-h"><strong>가로 네컷</strong><small>옆으로 쭉</small></button>
         </div>
-        <p class="mini-help" style="margin-top:8px;">PNG로 디자인된 프레임은 "세로 네컷"에서만 정확히 보여요.</p>
+        <p class="mini-help" style="margin-top:8px;">PNG로 디자인된 프레임은 "세로 네컷 + 사진 세로형"일 때만 정확히 보여요.</p>
+
+        <span class="label">사진 모양</span>
+        <div class="option-grid" id="orientationGrid">
+          <button class="option-card selected" data-orientation="landscape"><strong>가로형 (인생네컷 느낌)</strong><small>옆으로 넓은 사진</small></button>
+          <button class="option-card" data-orientation="portrait"><strong>세로형</strong><small>위아래로 긴 사진</small></button>
+        </div>
+        <p class="mini-help" style="margin-top:8px;">폰을 세로로 들고 찍어도 사진 자체는 가로형/세로형 중 고른 모양으로 잘려서 나와요.</p>
 
         <span class="label">프레임 문구</span>
         <input class="field" id="titleInput" type="text" maxlength="30" placeholder="우리의 순간">
@@ -278,9 +291,7 @@ canvas { display:block; width:100%; max-height:52vh; height:auto; margin:auto; b
         <div class="editor-toolbar">
           <div class="tabs">
             <button class="tab active" data-tab="frame">프레임</button>
-            <button class="tab" data-tab="sticker">스티커</button>
-            <button class="tab" data-tab="freetext">자유글자</button>
-            <button class="tab" data-tab="draw">손글씨</button>
+            <button class="tab" data-tab="decorate">사진 꾸미기</button>
             <button class="tab" data-tab="caption">하단문구</button>
           </div>
 
@@ -289,31 +300,9 @@ canvas { display:block; width:100%; max-height:52vh; height:auto; margin:auto; b
             <p class="mini-help">프레임 배경색을 바꿀 수 있어요.</p>
           </div>
 
-          <div class="tab-panel" id="tab-sticker">
-            <div class="sticker-list" id="stickerList"></div>
-            <label class="btn ghost" style="display:block; text-align:center; margin-top:10px;">
-              내 사진/로고를 스티커로 추가
-              <input id="stickerFileInput" type="file" accept="image/png,image/webp,image/jpeg,image/svg+xml" multiple style="display:none;">
-            </label>
-            <p class="mini-help">스티커를 고른 뒤 사진을 누르면 추가돼요. 이미 놓은 스티커는 눌러서 끌면 위치를 옮길 수 있어요. 배경 없는 PNG 이미지가 가장 예쁘게 들어가요. (이미지 스티커는 지금 화면에서만 쓸 수 있고, 새로고침하면 목록이 사라져요)</p>
-            <div class="btn-row"><button class="btn ghost" id="undoDecoBtn">하나 지우기</button><button class="btn ghost" id="clearDecoBtn">모두 지우기</button></div>
-          </div>
-
-          <div class="tab-panel" id="tab-freetext">
-            <input class="field" id="freeTextInput" maxlength="20" placeholder="예: 생일 축하해!">
-            <div class="palette" id="textColorPalette" style="margin-top:10px;"></div>
-            <div class="row" style="align-items:center; gap:8px; margin-top:10px;">
-              <span class="mini-help" style="margin:0;">크기</span>
-              <input type="range" id="textSizeRange" min="16" max="64" value="26" style="flex:1;">
-              <span class="mini-help" id="textSizeLabel" style="margin:0; width:28px;">26</span>
-            </div>
-            <p class="mini-help">글자를 입력하고 사진 위를 누르면 그 자리에 놓여요. 놓은 글자는 눌러서 끌면 위치를 옮길 수 있어요.</p>
-            <div class="btn-row"><button class="btn ghost" id="undoDecoBtn2">하나 지우기</button><button class="btn ghost" id="clearDecoBtn2">모두 지우기</button></div>
-          </div>
-
-          <div class="tab-panel" id="tab-draw">
-            <p class="mini-help">손글씨는 전용 편집창에서 그려요. 화면 스크롤과 안 겹쳐서 훨씬 편해요.</p>
-            <button class="btn primary" id="openDrawModalBtn" style="width:100%;">손글씨 편집창 열기</button>
+          <div class="tab-panel" id="tab-decorate">
+            <p class="mini-help">사진 한 장을 화면 가득 크게 띄워놓고 스티커·글자·손글씨를 넣을 수 있어요. 버튼으로 사진을 넘겨가며 하나씩 꾸며보세요.</p>
+            <button class="btn primary" id="openDecorateModalBtn" style="width:100%;">사진 꾸미기 편집창 열기</button>
           </div>
 
           <div class="tab-panel" id="tab-caption">
@@ -332,18 +321,52 @@ canvas { display:block; width:100%; max-height:52vh; height:auto; margin:auto; b
 <div class="draw-modal" id="drawModal">
   <div class="draw-head">
     <button class="btn secondary" id="cancelDrawBtn">닫기</button>
-    <strong>손글씨 편집</strong>
+    <strong id="decorateModalTitle">사진 1 꾸미기</strong>
     <button class="btn primary" id="applyDrawBtn">적용</button>
+  </div>
+  <div class="photo-nav" id="photoNav">
+    <button class="photo-nav-btn" data-photo-index="0">1번</button>
+    <button class="photo-nav-btn" data-photo-index="1">2번</button>
+    <button class="photo-nav-btn" data-photo-index="2">3번</button>
+    <button class="photo-nav-btn" data-photo-index="3">4번</button>
   </div>
   <div class="draw-area" id="drawArea"><canvas id="drawCanvas"></canvas></div>
   <div class="draw-footer">
-    <div class="palette" id="drawColorPalette"></div>
-    <div class="row" style="align-items:center; gap:8px; margin-top:8px;">
-      <span class="mini-help" style="margin:0;">굵기</span>
-      <input type="range" id="drawWidthRange" min="2" max="24" value="5" style="flex:1;">
-      <span class="mini-help" id="drawWidthLabel" style="margin:0; width:24px;">5</span>
+    <div class="mode-row">
+      <button class="mode active" data-mode="sticker">✨ 스티커</button>
+      <button class="mode" data-mode="text">Aa 글자</button>
+      <button class="mode" data-mode="draw">✏️ 손글씨</button>
     </div>
-    <div class="btn-row"><button class="btn ghost" id="drawUndoBtn">한 획 지우기</button><button class="btn ghost" id="drawClearBtn">모두 지우기</button></div>
+
+    <div class="modal-mode-panel" id="modalStickerPanel">
+      <div class="sticker-list" id="stickerList"></div>
+      <label class="btn ghost" style="display:block; text-align:center; margin-top:8px;">
+        내 사진/로고를 스티커로 추가
+        <input id="stickerFileInput" type="file" accept="image/png,image/webp,image/jpeg,image/svg+xml" multiple style="display:none;">
+      </label>
+    </div>
+
+    <div class="modal-mode-panel" id="modalTextPanel" style="display:none;">
+      <input class="field" id="freeTextInput" maxlength="20" placeholder="예: 생일 축하해!">
+      <div class="palette" id="textColorPalette" style="margin-top:8px;"></div>
+      <div class="row" style="align-items:center; gap:8px; margin-top:8px;">
+        <span class="mini-help" style="margin:0;">크기</span>
+        <input type="range" id="textSizeRange" min="16" max="64" value="26" style="flex:1;">
+        <span class="mini-help" id="textSizeLabel" style="margin:0; width:28px;">26</span>
+      </div>
+    </div>
+
+    <div class="modal-mode-panel" id="modalDrawPanel" style="display:none;">
+      <div class="palette" id="drawColorPalette"></div>
+      <div class="row" style="align-items:center; gap:8px; margin-top:8px;">
+        <span class="mini-help" style="margin:0;">굵기</span>
+        <input type="range" id="drawWidthRange" min="2" max="24" value="5" style="flex:1;">
+        <span class="mini-help" id="drawWidthLabel" style="margin:0; width:24px;">5</span>
+      </div>
+    </div>
+
+    <p class="mini-help" id="modalHint">스티커를 고른 뒤 사진을 누르면 추가돼요. 이미 놓은 건 눌러서 끌면 위치를 옮길 수 있어요.</p>
+    <div class="btn-row"><button class="btn ghost" id="drawUndoBtn">이 사진에서 하나 되돌리기</button><button class="btn ghost" id="drawClearBtn">이 사진만 전체 지우기</button></div>
   </div>
 </div>
 
@@ -435,12 +458,16 @@ const $$ = (s) => [...document.querySelectorAll(s)];
 
 const state = {
   frame: APP_CONFIG.frames[0], layout:'strip-v', shotTarget:8, timer:3, filter: APP_CONFIG.filters[0].css,
+  photoOrientation: 'landscape',
   stream:null, facing:'user', shots:[], selected:[],
-  decorations:[], activeSticker:null, imageStickers:[], textColor:'#111111', textSize:26, drawColor:'#111111', drawWidth:5,
+  photoDecorations: [[],[],[],[]], // 사진 4장 각각의 꾸미기 내용 (독립적으로 저장됨)
+  modalDecorations: [[],[],[],[]], // 편집창 안에서 작업 중인 임시 사본 ("적용" 눌러야 실제 반영됨)
+  modalPhotoIndex: 0, modalMode: 'sticker',
+  activeSticker:null, imageStickers:[], textColor:'#111111', textSize:26, drawColor:'#111111', drawWidth:5,
   frameBg:APP_CONFIG.frames[0].bg, draggingIndex:-1,
   running:false, activeTab:'frame',
   mediaRecorder:null, recordedChunks:[], recordedMimeType:'', sessionVideoUrl:null,
-  drawWorking:[], drawActiveStroke:null
+  drawActiveStroke:null
 };
 
 const screens = ['Setup','Camera','Select','Edit'];
@@ -495,70 +522,13 @@ function initUI(){
   bindFontLoader();
   bindStickerFileInput();
   bindSliders();
-  bindDrawModal();
+  bindDecorateModal();
 }
 
 /* ---------- 텍스트 크기·손글씨 굵기 슬라이더 ---------- */
 function bindSliders(){
   $('#textSizeRange').oninput = (e) => { state.textSize = Number(e.target.value); $('#textSizeLabel').textContent = state.textSize; };
   $('#drawWidthRange').oninput = (e) => { state.drawWidth = Number(e.target.value); $('#drawWidthLabel').textContent = state.drawWidth; };
-}
-
-/* ---------- 손글씨 전용 편집창 (페이지 스크롤과 완전히 분리되어 있어서, 그리다가 화면에 갇히지 않아요) ---------- */
-function drawModalPoint(e){
-  const r = $('#drawCanvas').getBoundingClientRect();
-  const p = e.touches ? e.touches[0] : e;
-  return { x: (p.clientX - r.left) / r.width, y: (p.clientY - r.top) / r.height };
-}
-function renderDrawCanvas(){
-  const d = $('#drawCanvas'); const ctx = d.getContext('2d');
-  ctx.clearRect(0, 0, d.width, d.height);
-  ctx.drawImage($('#finalCanvas'), 0, 0);
-  state.drawWorking.forEach(s => drawDecoration(ctx, s, d.width, d.height));
-}
-function openDrawModal(){
-  renderFinal();
-  const src = $('#finalCanvas'), d = $('#drawCanvas');
-  d.width = src.width; d.height = src.height;
-  state.drawWorking = [];
-  $('#drawModal').classList.add('show');
-  document.body.style.overflow = 'hidden';
-  renderDrawCanvas();
-}
-function closeDrawModal(){
-  state.drawActiveStroke = null;
-  $('#drawModal').classList.remove('show');
-  document.body.style.overflow = '';
-}
-function bindDrawModal(){
-  $('#openDrawModalBtn').onclick = openDrawModal;
-  $('#cancelDrawBtn').onclick = closeDrawModal;
-  $('#applyDrawBtn').onclick = () => {
-    state.decorations.push(...state.drawWorking);
-    renderFinal();
-    closeDrawModal();
-  };
-  $('#drawUndoBtn').onclick = () => { state.drawWorking.pop(); renderDrawCanvas(); };
-  $('#drawClearBtn').onclick = () => { state.drawWorking = []; renderDrawCanvas(); };
-
-  const canvas = $('#drawCanvas');
-  const start = (e) => {
-    const p = drawModalPoint(e);
-    state.drawActiveStroke = { type:'stroke', color: state.drawColor, width: state.drawWidth, points:[p] };
-    state.drawWorking.push(state.drawActiveStroke);
-    if (canvas.setPointerCapture && e.pointerId !== undefined) canvas.setPointerCapture(e.pointerId);
-  };
-  const move = (e) => {
-    if (!state.drawActiveStroke) return;
-    state.drawActiveStroke.points.push(drawModalPoint(e));
-    renderDrawCanvas();
-  };
-  const end = () => { state.drawActiveStroke = null; };
-
-  canvas.addEventListener('pointerdown', start);
-  canvas.addEventListener('pointermove', move);
-  canvas.addEventListener('pointerup', end);
-  canvas.addEventListener('pointercancel', end);
 }
 
 /* 폰트 파일을 그 자리에서 바로 불러와 미리 확인하는 기능 (내 화면에서만 적용, 새로고침하면 사라짐) */
@@ -747,11 +717,12 @@ function captureFrame(){
   const v = $('#video');
   if (!v.videoWidth) throw new Error('카메라 영상이 아직 준비되지 않았습니다.');
   const out = document.createElement('canvas');
-  const targetRatio = 3/4;
+  const landscape = state.photoOrientation === 'landscape';
+  const targetRatio = landscape ? 4/3 : 3/4; // 가로형: 가로가 더 긴 4:3 / 세로형: 세로가 더 긴 3:4
   const vw = v.videoWidth, vh = v.videoHeight;
   let sx=0, sy=0, sw=vw, sh=vh;
   if (vw/vh > targetRatio) { sw = vh*targetRatio; sx = (vw-sw)/2; } else { sh = vw/targetRatio; sy = (vh-sh)/2; }
-  out.width = 900; out.height = 1200;
+  if (landscape) { out.width = 1200; out.height = 900; } else { out.width = 900; out.height = 1200; }
   const c = out.getContext('2d');
   try { if ('filter' in c) c.filter = state.filter; } catch (e) { /* 구형 브라우저는 무시 */ }
   if (state.facing === 'user') { c.translate(out.width, 0); c.scale(-1, 1); }
@@ -846,13 +817,15 @@ function loadImageFile(file){
     const img = new Image();
     img.onload = () => {
       URL.revokeObjectURL(img.src);
-      const out = document.createElement('canvas'); out.width = 900; out.height = 1200;
+      const landscape = state.photoOrientation === 'landscape';
+      const outW = landscape ? 1200 : 900, outH = landscape ? 900 : 1200;
+      const out = document.createElement('canvas'); out.width = outW; out.height = outH;
       const c = out.getContext('2d');
       try { if ('filter' in c) c.filter = state.filter; } catch (e) { /* 구형 브라우저는 무시 */ }
-      const tr = 3/4, ir = img.width/img.height;
+      const tr = landscape ? 4/3 : 3/4, ir = img.width/img.height;
       let sx=0, sy=0, sw=img.width, sh=img.height;
       if (ir > tr) { sw = img.height*tr; sx = (img.width-sw)/2; } else { sh = img.width/tr; sy = (img.height-sh)/2; }
-      c.drawImage(img, sx, sy, sw, sh, 0, 0, 900, 1200);
+      c.drawImage(img, sx, sy, sw, sh, 0, 0, outW, outH);
       resolve(out);
     };
     img.onerror = reject;
@@ -873,17 +846,24 @@ async function handleFiles(files){
 /* ---------- 최종 레이아웃 계산 ---------- */
 function computeLayout(){
   const pad = 24, gap = 12, footer = 110;
+  const landscape = state.photoOrientation === 'landscape';
+  // 실제 인생네컷처럼 가로형은 옆으로 넓은 칸(4:3), 세로형은 위아래로 긴 칸(3:4)
+  const cellRatioH = landscape ? 0.75 : 1.3333; // cellH = cellW * cellRatioH
+
   if (state.layout === 'grid') {
-    const cellW = 390, cellH = 520;
+    const cellW = landscape ? 460 : 390;
+    const cellH = Math.round(cellW * cellRatioH);
     const w = pad*2 + cellW*2 + gap, h = pad*2 + cellH*2 + gap + footer;
     return { w, h, cells: [0,1,2,3].map(i => ({ x: pad + (i%2)*(cellW+gap), y: pad + Math.floor(i/2)*(cellH+gap), w: cellW, h: cellH })) };
   }
   if (state.layout === 'strip-h') {
-    const cellH = 480, cellW = 360;
+    const cellW = landscape ? 480 : 300;
+    const cellH = Math.round(cellW * cellRatioH);
     const w = pad*2 + cellW*4 + gap*3, h = pad*2 + cellH + footer;
     return { w, h, cells: [0,1,2,3].map(i => ({ x: pad + i*(cellW+gap), y: pad, w: cellW, h: cellH })) };
   }
-  const cellW = 600, cellH = 800;
+  const cellW = landscape ? 700 : 600;
+  const cellH = Math.round(cellW * cellRatioH);
   const w = pad*2 + cellW, h = pad*2 + cellH*4 + gap*3 + footer;
   return { w, h, cells: [0,1,2,3].map(i => ({ x: pad, y: pad + i*(cellH+gap), w: cellW, h: cellH })) };
 }
@@ -894,28 +874,32 @@ function contrastColor(hex){
 
 function drawDecoration(ctx, d, w, h){
   if (d.type === 'sticker') {
-    ctx.font = `${d.size}px sans-serif`; ctx.textAlign='center'; ctx.textBaseline='middle';
+    const size = d.sizeFrac * w;
+    ctx.font = `${size}px sans-serif`; ctx.textAlign='center'; ctx.textBaseline='middle';
     ctx.fillText(d.emoji, d.x*w, d.y*h);
   } else if (d.type === 'image') {
     if (!d.img || !d.img.complete) return;
-    ctx.drawImage(d.img, d.x*w - d.size/2, d.y*h - d.size/2, d.size, d.size);
+    const size = d.sizeFrac * w;
+    ctx.drawImage(d.img, d.x*w - size/2, d.y*h - size/2, size, size);
   } else if (d.type === 'text') {
-    ctx.font = `700 ${d.size}px 'CustomFont', sans-serif`;
+    const size = d.sizeFrac * w;
+    ctx.font = `700 ${size}px 'CustomFont', sans-serif`;
     ctx.textAlign='center'; ctx.textBaseline='middle';
-    ctx.lineWidth = Math.max(2, d.size*.08);
+    ctx.lineWidth = Math.max(2, size*.08);
     ctx.strokeStyle = 'rgba(0,0,0,.22)';
     ctx.strokeText(d.content, d.x*w, d.y*h);
     ctx.fillStyle = d.color;
     ctx.fillText(d.content, d.x*w, d.y*h);
   } else if (d.type === 'stroke') {
     if (d.points.length < 2) return;
-    ctx.strokeStyle = d.color; ctx.lineWidth = d.width; ctx.lineCap='round'; ctx.lineJoin='round';
+    ctx.strokeStyle = d.color; ctx.lineWidth = d.widthFrac * w; ctx.lineCap='round'; ctx.lineJoin='round';
     ctx.beginPath();
     ctx.moveTo(d.points[0].x*w, d.points[0].y*h);
     for (let i=1;i<d.points.length;i++) ctx.lineTo(d.points[i].x*w, d.points[i].y*h);
     ctx.stroke();
   }
 }
+const DECO_REF_W = 900; // 슬라이더 숫자(px)를 비율로 바꿀 때 기준으로 삼는 폭
 
 function renderFinal(){
   if (state.selected.length !== 4) return;
@@ -925,10 +909,21 @@ function renderFinal(){
   const ink = state.frameBg === state.frame.bg ? state.frame.accent : contrastColor(state.frameBg);
 
   const overlayImg = frameOverlayImages[state.frame.id];
-  const useOverlay = state.layout === 'strip-v' && overlayImg && overlayImg.complete && overlayImg.naturalWidth > 0;
+  const useOverlay = state.layout === 'strip-v' && state.photoOrientation === 'portrait' && overlayImg && overlayImg.complete && overlayImg.naturalWidth > 0;
 
   ctx.fillStyle = state.frameBg; ctx.fillRect(0,0,w,h);
-  state.selected.forEach((idx, i) => { const c = cells[i]; ctx.drawImage(state.shots[idx], c.x, c.y, c.w, c.h); });
+  state.selected.forEach((idx, i) => {
+    const c = cells[i];
+    ctx.drawImage(state.shots[idx], c.x, c.y, c.w, c.h);
+    // 이 사진에 붙인 스티커·글자·손글씨를, 이 칸 크기에 맞춰서 그려요
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(c.x, c.y, c.w, c.h);
+    ctx.clip();
+    ctx.translate(c.x, c.y);
+    (state.photoDecorations[i] || []).forEach(d => drawDecoration(ctx, d, c.w, c.h));
+    ctx.restore();
+  });
 
   if (useOverlay) {
     ctx.drawImage(overlayImg, 0, 0, w, h);
@@ -948,20 +943,27 @@ function renderFinal(){
     ctx.fillText(state.frame.deco[0], 55, h-57);
     ctx.fillText(state.frame.deco[1], w-55, h-57);
   }
-
-  state.decorations.forEach(d => drawDecoration(ctx, d, w, h));
 }
 
-/* ---------- 캔버스 상호작용 (스티커/텍스트 배치·드래그, 손글씨) ---------- */
-function canvasPoint(e){
-  const r = $('#finalCanvas').getBoundingClientRect();
+/* ---------- 사진 꾸미기 편집창 (스티커/글자/손글씨를 사진 한 장씩 크게 보면서 작업) ---------- */
+function cloneDecorations(list){
+  return list.map(arr => arr.map(d => d.type === 'stroke'
+    ? { ...d, points: d.points.map(p => ({ ...p })) }
+    : { ...d }
+  ));
+}
+
+function modalCanvasPoint(e){
+  const r = $('#drawCanvas').getBoundingClientRect();
   const p = e.touches ? e.touches[0] : e;
   return { x: (p.clientX - r.left) / r.width, y: (p.clientY - r.top) / r.height };
 }
-function findDecorationHit(p){
-  const canvas = $('#finalCanvas');
-  let hit = -1, best = 42;
-  state.decorations.forEach((d, i) => {
+
+function findModalDecorationHit(p){
+  const canvas = $('#drawCanvas');
+  const list = state.modalDecorations[state.modalPhotoIndex];
+  let hit = -1, best = 46;
+  list.forEach((d, i) => {
     if (d.type === 'stroke') return;
     const dx = (d.x - p.x) * canvas.width, dy = (d.y - p.y) * canvas.height;
     const dist = Math.hypot(dx, dy);
@@ -969,44 +971,126 @@ function findDecorationHit(p){
   });
   return hit;
 }
-function addDecoration(d){ state.decorations.push(d); renderFinal(); }
 
-function pointerDown(e){
+function renderModalCanvas(){
+  const shotIdx = state.selected[state.modalPhotoIndex];
+  const photo = state.shots[shotIdx];
+  const canvas = $('#drawCanvas');
+  canvas.width = photo.width; canvas.height = photo.height;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.drawImage(photo, 0, 0);
+  state.modalDecorations[state.modalPhotoIndex].forEach(d => drawDecoration(ctx, d, canvas.width, canvas.height));
+}
+
+function setModalPhoto(index){
+  state.modalPhotoIndex = index;
+  $$('.photo-nav-btn').forEach(b => b.classList.toggle('active', Number(b.dataset.photoIndex) === index));
+  $('#decorateModalTitle').textContent = `사진 ${index + 1} 꾸미기`;
+  renderModalCanvas();
+}
+
+function setModalMode(mode){
+  state.modalMode = mode;
+  $$('.mode').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
+  $('#modalStickerPanel').style.display = mode === 'sticker' ? 'block' : 'none';
+  $('#modalTextPanel').style.display = mode === 'text' ? 'block' : 'none';
+  $('#modalDrawPanel').style.display = mode === 'draw' ? 'block' : 'none';
+  const hints = {
+    sticker: '스티커를 고른 뒤 사진을 누르면 추가돼요. 이미 놓은 건 눌러서 끌면 위치를 옮길 수 있어요.',
+    text: '글자를 입력하고 사진 위를 누르면 놓여요. 이미 놓은 글자는 눌러서 끌면 위치를 옮길 수 있어요.',
+    draw: '손가락으로 사진 위에 바로 그려보세요.'
+  };
+  $('#modalHint').textContent = hints[mode];
+}
+
+function openDecorateModal(){
   if (state.selected.length !== 4) return;
-  const p = canvasPoint(e);
-  const hit = findDecorationHit(p);
-  if (hit >= 0) { state.draggingIndex = hit; e.preventDefault(); return; }
-
-  if (state.activeTab === 'sticker' && state.activeSticker) {
-    if (state.activeSticker.kind === 'emoji') {
-      addDecoration({ type:'sticker', emoji: state.activeSticker.value, x:p.x, y:p.y, size: state.layout==='grid'?48:42 });
-    } else {
-      addDecoration({ type:'image', img: state.activeSticker.img, x:p.x, y:p.y, size: state.layout==='grid'?110:90 });
-    }
-    return;
-  }
-  if (state.activeTab === 'freetext') {
-    const content = $('#freeTextInput').value.trim();
-    if (content) addDecoration({ type:'text', content, x:p.x, y:p.y, color: state.textColor, size: state.textSize });
-    return;
-  }
+  state.modalDecorations = cloneDecorations(state.photoDecorations);
+  state.modalPhotoIndex = 0;
+  setModalMode('sticker');
+  $('#drawModal').classList.add('show');
+  document.body.style.overflow = 'hidden';
+  setModalPhoto(0);
 }
-function pointerMove(e){
-  if (state.draggingIndex >= 0) {
-    const p = canvasPoint(e);
-    state.decorations[state.draggingIndex].x = Math.max(0, Math.min(1, p.x));
-    state.decorations[state.draggingIndex].y = Math.max(0, Math.min(1, p.y));
-    renderFinal();
-    e.preventDefault();
-  }
-}
-function pointerUp(){
+function closeDecorateModal(){
+  state.drawActiveStroke = null;
   state.draggingIndex = -1;
-  state.activeStroke = null;
+  $('#drawModal').classList.remove('show');
+  document.body.style.overflow = '';
 }
 
-function undoDecoration(){ state.decorations.pop(); renderFinal(); }
-function clearDecorations(){ state.decorations = []; renderFinal(); }
+function bindDecorateModal(){
+  $('#openDecorateModalBtn').onclick = openDecorateModal;
+  $('#cancelDrawBtn').onclick = closeDecorateModal;
+  $('#applyDrawBtn').onclick = () => {
+    state.photoDecorations = state.modalDecorations;
+    renderFinal();
+    closeDecorateModal();
+  };
+  $('#drawUndoBtn').onclick = () => { state.modalDecorations[state.modalPhotoIndex].pop(); renderModalCanvas(); };
+  $('#drawClearBtn').onclick = () => { state.modalDecorations[state.modalPhotoIndex] = []; renderModalCanvas(); };
+
+  $$('.photo-nav-btn').forEach(btn => btn.onclick = () => setModalPhoto(Number(btn.dataset.photoIndex)));
+  $$('.mode').forEach(btn => btn.onclick = () => setModalMode(btn.dataset.mode));
+
+  const canvas = $('#drawCanvas');
+
+  const start = (e) => {
+    const p = modalCanvasPoint(e);
+    const hit = findModalDecorationHit(p);
+    if (hit >= 0) { state.draggingIndex = hit; e.preventDefault(); return; }
+
+    if (state.modalMode === 'sticker' && state.activeSticker) {
+      const list = state.modalDecorations[state.modalPhotoIndex];
+      if (state.activeSticker.kind === 'emoji') {
+        list.push({ type:'sticker', emoji: state.activeSticker.value, x:p.x, y:p.y, sizeFrac: 90/DECO_REF_W });
+      } else {
+        list.push({ type:'image', img: state.activeSticker.img, x:p.x, y:p.y, sizeFrac: 190/DECO_REF_W });
+      }
+      renderModalCanvas();
+      return;
+    }
+    if (state.modalMode === 'text') {
+      const content = $('#freeTextInput').value.trim();
+      if (content) {
+        state.modalDecorations[state.modalPhotoIndex].push({ type:'text', content, x:p.x, y:p.y, color: state.textColor, sizeFrac: state.textSize/DECO_REF_W });
+        renderModalCanvas();
+      }
+      return;
+    }
+    if (state.modalMode === 'draw') {
+      state.drawActiveStroke = { type:'stroke', color: state.drawColor, widthFrac: state.drawWidth/DECO_REF_W, points:[p] };
+      state.modalDecorations[state.modalPhotoIndex].push(state.drawActiveStroke);
+      if (canvas.setPointerCapture && e.pointerId !== undefined) canvas.setPointerCapture(e.pointerId);
+      e.preventDefault();
+    }
+  };
+
+  const move = (e) => {
+    if (state.draggingIndex >= 0) {
+      const p = modalCanvasPoint(e);
+      const d = state.modalDecorations[state.modalPhotoIndex][state.draggingIndex];
+      d.x = Math.max(0, Math.min(1, p.x));
+      d.y = Math.max(0, Math.min(1, p.y));
+      renderModalCanvas();
+      e.preventDefault();
+      return;
+    }
+    if (state.modalMode === 'draw' && state.drawActiveStroke) {
+      state.drawActiveStroke.points.push(modalCanvasPoint(e));
+      renderModalCanvas();
+      e.preventDefault();
+    }
+  };
+
+  const end = () => { state.draggingIndex = -1; state.drawActiveStroke = null; };
+
+  canvas.addEventListener('pointerdown', start);
+  canvas.addEventListener('pointermove', move);
+  canvas.addEventListener('pointerup', end);
+  canvas.addEventListener('pointercancel', end);
+}
 
 function download(){
   renderFinal();
@@ -1034,6 +1118,12 @@ function bindEvents(){
     state.layout = b.dataset.layout;
   });
 
+  $$('#orientationGrid .option-card').forEach(b => b.onclick = () => {
+    $$('#orientationGrid .option-card').forEach(x => x.classList.remove('selected'));
+    b.classList.add('selected');
+    state.photoOrientation = b.dataset.orientation;
+  });
+
   $('#toCameraBtn').onclick = () => {
     state.shotTarget = Number($('#shotCount').value);
     state.timer = Number($('#timerSelect').value);
@@ -1049,7 +1139,7 @@ function bindEvents(){
 
   $('#retakeBtn').onclick = () => { state.shots = []; state.selected = []; renderShotStrip(); showScreen('Camera'); startCamera(); };
   $('#toEditBtn').onclick = () => {
-    state.decorations = [];
+    state.photoDecorations = [[],[],[],[]];
     state.frameBg = state.frame.bg;
     $('#editTitleInput').value = $('#titleInput').value.trim() || state.frame.title;
     refreshFramePalette();
@@ -1062,27 +1152,15 @@ function bindEvents(){
   $$('.tab').forEach(t => t.onclick = () => setActiveTab(t.dataset.tab));
 
   $('#editTitleInput').oninput = renderFinal;
-  $('#undoDecoBtn').onclick = undoDecoration; $('#clearDecoBtn').onclick = clearDecorations;
-  $('#undoDecoBtn2').onclick = undoDecoration; $('#clearDecoBtn2').onclick = clearDecorations;
-  // (손글씨는 전용 편집창에서 되돌리기/지우기를 따로 처리합니다 — bindDrawModal 참고)
 
   $('#downloadBtn').onclick = download;
   $('#restartBtn').onclick = () => {
     stopCamera();
     if (state.sessionVideoUrl) URL.revokeObjectURL(state.sessionVideoUrl);
-    state.shots = []; state.selected = []; state.decorations = []; state.sessionVideoUrl = null;
+    state.shots = []; state.selected = []; state.photoDecorations = [[],[],[],[]]; state.sessionVideoUrl = null;
     $('#sessionVideoWrap').classList.remove('show');
     showScreen('Setup');
   };
-
-  const c = $('#finalCanvas');
-  c.addEventListener('mousedown', pointerDown);
-  c.addEventListener('mousemove', pointerMove);
-  window.addEventListener('mouseup', pointerUp);
-  c.addEventListener('touchstart', pointerDown, { passive: false });
-  c.addEventListener('touchmove', pointerMove, { passive: false });
-  window.addEventListener('touchend', pointerUp);
-  window.addEventListener('touchcancel', pointerUp);
 
   window.addEventListener('beforeunload', stopCamera);
 }
