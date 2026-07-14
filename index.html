@@ -99,7 +99,7 @@ button { touch-action: manipulation; }
 .btn:disabled { opacity:.45; cursor:not-allowed; transform:none; }
 .btn-row .btn { flex:1; }
 
-.camera-shell { position:relative; width:100%; aspect-ratio:3/4; overflow:hidden; border-radius:16px; background:#000; }
+.camera-shell { position:relative; width:100%; aspect-ratio:3/4; overflow:hidden; border-radius:16px; background:#000; transition:aspect-ratio .15s; }
 video { width:100%; height:100%; object-fit:cover; transform:scaleX(-1); }
 video.back { transform:none; }
 .camera-grid { position:absolute; inset:0; pointer-events:none; background:linear-gradient(to right,transparent 33.2%,rgba(255,255,255,.22) 33.3%,rgba(255,255,255,.22) 33.6%,transparent 33.7%,transparent 66.2%,rgba(255,255,255,.22) 66.3%,rgba(255,255,255,.22) 66.6%,transparent 66.7%),linear-gradient(to bottom,transparent 33.2%,rgba(255,255,255,.22) 33.3%,rgba(255,255,255,.22) 33.6%,transparent 33.7%,transparent 66.2%,rgba(255,255,255,.22) 66.3%,rgba(255,255,255,.22) 66.6%,transparent 66.7%); opacity:.28; }
@@ -173,9 +173,9 @@ canvas { display:block; width:100%; max-height:52vh; height:auto; margin:auto; b
 .mode-row { display:grid; grid-template-columns:repeat(3,1fr); gap:7px; margin-bottom:10px; }
 .mode { border:2px solid transparent; background:var(--panel2); color:#fff; border-radius:11px; padding:10px 4px; font-size:12px; font-weight:800; }
 .mode.active { border-color:var(--primary); background:#40242f; }
-.draw-area { flex:1; min-height:0; overflow:auto; display:grid; place-items:center; background:#08080a; border-radius:14px; border:1px solid var(--line); overscroll-behavior:contain; }
+.draw-area { flex:1 1 auto; min-height:34vh; overflow:auto; display:grid; place-items:center; background:#08080a; border-radius:14px; border:1px solid var(--line); overscroll-behavior:contain; }
 #drawCanvas { display:block; max-width:100%; max-height:100%; touch-action:none; background:#fff; }
-.draw-footer { flex:0 0 auto; padding-top:10px; }
+.draw-footer { flex:0 1 auto; padding-top:10px; max-height:38vh; overflow-y:auto; overscroll-behavior:contain; }
 
 @media (max-width:380px) { .option-grid{grid-template-columns:1fr} .option-grid.cols-3{grid-template-columns:1fr} .sticker-list{grid-template-columns:repeat(5,1fr)} }
 </style>
@@ -236,7 +236,7 @@ canvas { display:block; width:100%; max-height:52vh; height:auto; margin:auto; b
       <div class="card">
         <h2 class="section-title">촬영 준비</h2>
         <p class="section-desc">자동으로 여러 장을 찍어요. 화면을 보고 포즈만 바꿔주세요.</p>
-        <div class="camera-shell">
+        <div class="camera-shell" id="cameraShell">
           <video id="video" autoplay playsinline muted></video>
           <div class="camera-grid"></div>
           <div class="camera-top">
@@ -522,6 +522,7 @@ function initUI(){
   document.title = APP_CONFIG.appName;
   $('#appTitle').textContent = APP_CONFIG.appName;
   $('#titleInput').placeholder = APP_CONFIG.defaultTitle;
+  updateCameraShellAspect();
   renderFrames();
   renderShotStrip();
   renderFilters();
@@ -735,6 +736,15 @@ async function startCamera(){
 }
 function stopCamera(){ if (state.stream) { state.stream.getTracks().forEach(t => t.stop()); state.stream = null; } }
 
+/* 미리보기 화면 비율을 지금 고른 사진 모양(가로형/세로형)에 맞춰줘요.
+   이걸 안 맞추면 "화면에 보이는 것"과 "실제 저장되는 사진"이 서로 달라져서,
+   미리보기에선 얼굴이 다 보였는데 저장하면 위아래(또는 양옆)가 잘리는 문제가 생겨요. */
+function updateCameraShellAspect(){
+  const shell = $('#cameraShell');
+  if (!shell) return;
+  shell.style.aspectRatio = state.photoOrientation === 'landscape' ? '4/3' : '3/4';
+}
+
 function captureFrame(){
   const v = $('#video');
   if (!v.videoWidth) throw new Error('카메라 영상이 아직 준비되지 않았습니다.');
@@ -867,7 +877,7 @@ async function handleFiles(files){
 
 /* ---------- 최종 레이아웃 계산 ---------- */
 function computeLayout(){
-  const pad = 24, gap = 12, footer = 110;
+  const pad = 24, gap = 12, footer = 160;
   const landscape = state.photoOrientation === 'landscape';
   // 실제 인생네컷처럼 가로형은 옆으로 넓은 칸(4:3), 세로형은 위아래로 긴 칸(3:4)
   const cellRatioH = landscape ? 0.75 : 1.3333; // cellH = cellW * cellRatioH
@@ -956,15 +966,15 @@ function renderFinal(){
 
   const title = $('#editTitleInput').value.trim() || state.frame.title;
   ctx.fillStyle = ink; ctx.textAlign='center'; ctx.textBaseline='middle';
-  ctx.font = `800 ${state.layout==='grid'?34:30}px 'CustomFont', sans-serif`;
-  ctx.fillText(title, w/2, h-72);
-  ctx.font = `600 ${state.layout==='grid'?18:16}px 'CustomFont', sans-serif`;
-  ctx.globalAlpha = .72; ctx.fillText(new Date().toLocaleDateString('ko-KR'), w/2, h-36); ctx.globalAlpha = 1;
+  ctx.font = `800 ${state.layout==='grid'?36:32}px 'CustomFont', sans-serif`;
+  ctx.fillText(title, w/2, h-105);
+  ctx.font = `600 ${state.layout==='grid'?19:17}px 'CustomFont', sans-serif`;
+  ctx.globalAlpha = .72; ctx.fillText(new Date().toLocaleDateString('ko-KR'), w/2, h-55); ctx.globalAlpha = 1;
 
   if (!useOverlay && (state.frame.deco[0] || state.frame.deco[1])) {
-    ctx.font = `${state.layout==='grid'?35:32}px sans-serif`;
-    ctx.fillText(state.frame.deco[0], 55, h-57);
-    ctx.fillText(state.frame.deco[1], w-55, h-57);
+    ctx.font = `${state.layout==='grid'?36:33}px sans-serif`;
+    ctx.fillText(state.frame.deco[0], 55, h-80);
+    ctx.fillText(state.frame.deco[1], w-55, h-80);
   }
 }
 
@@ -1145,6 +1155,7 @@ function bindEvents(){
     $$('#orientationGrid .option-card').forEach(x => x.classList.remove('selected'));
     b.classList.add('selected');
     state.photoOrientation = b.dataset.orientation;
+    updateCameraShellAspect();
   });
 
   $('#toCameraBtn').onclick = () => {
@@ -1152,6 +1163,7 @@ function bindEvents(){
     state.timer = Number($('#timerSelect').value);
     state.shots = []; state.selected = [];
     renderShotStrip();
+    updateCameraShellAspect();
     showScreen('Camera');
     startCamera();
   };
